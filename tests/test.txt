@@ -1,0 +1,17 @@
+COMPILER Aritmetica    
+
+CHARACTERS 
+
+KEYWORDS
+
+TOKENS
+
+PRODUCTIONS
+
+Expr= {Stat (";")}".".
+
+Stat = 							(.int value;.)
+	Expression<. ref value.>		(.System.Console.WriteLn(value.ToString());.)
+	.
+
+END Aritmetica

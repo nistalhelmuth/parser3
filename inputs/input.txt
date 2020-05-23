@@ -1,0 +1,15 @@
+COMPILER Ejemplo
+
+CHARACTERS
+
+tab = CHR(9) .
+letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" . 
+eol = CHR(10) .
+digit = "0123456789" .
+
+KEYWORDS
+
+TOKENS
+
+
+END Ejemplo.

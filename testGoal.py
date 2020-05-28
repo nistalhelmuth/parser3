@@ -1,32 +1,21 @@
-def Expr():
-	{
-	Stat()
-	(
-	";"
-	)
-	}
-	"."
+def Factor(result):
+	int signo=1;	
+	if(Expect()):	
+			Get("-")	
+			signo = -1;	
+			
+	(	
+	result = Number(result)	
+	|	
+	Get("(")	
+	result = Expression(result)	
+	Get(")")	
+	)	
+	result*=signo;	
+	return result
 
-def Stat():
-	int value
-	Expression()
-	ref value
-	print(value)
-
-def Expression(ref int result):
-	int result1,result2
-	Term()
-	ref result1
-	{
-	"+"
-	Term()
-	ref result2
-	result1+=result2
-	|
-	"-"
-	Term()
-	ref result2
-	result1-=result2
-	}
-	result=result1;
+def Number(result):
+	Get(number)	
+	result = int.Parse(lastToken.Value)	
+	return result
 

@@ -1,18 +1,11 @@
 COMPILER Aritmetica    
 
 PRODUCTIONS
+	
+Factor<.ref result.> =	
+	["-"]
+	( Number<.ref result.> | "("Expression<. ref result.>")") .
 
-Expr= {Stat (";")}".".
-
-Stat = 							(.int value.)
-	Expression<.ref value.>		(.print(value).)
-	.
-
-Expression<.ref int result.> =		(.int result1,result2.)
-	Term<.ref result1.>
-	{    "+"Term<.ref result2.>		(.result1+=result2.)
-	   | "-"Term<.ref result2.>		(.result1-=result2.)
-	}							(.result=result1;.)
-	.
+Number<.ref result.> =  number (.result = int.Parse(lastToken.Value).).
 
 END Aritmetica

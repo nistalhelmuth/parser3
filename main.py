@@ -2,6 +2,7 @@ import string
 import string as strDefinition
 from utils.dfa import DFA
 from utils.evaluate import Node
+from utils.translate import Translator
 import re
 
 class Token():
@@ -13,7 +14,6 @@ class Token():
         self.line = line                   # line number (starting at 1)
         self.col = col                     # column number (starting at 1)
 
-
 class Buffer():
     def __init__ (self, stream):
         def clean(phrase):
@@ -24,21 +24,29 @@ class Buffer():
             i = 0
             while i < len(phrase):
                 letter = phrase[i]
-                if (letter == '(' and phrase[i+1:i+2] == '.') or (letter == '<' and phrase[i+1:i+2] == '.') and specialFlag:
+                if (letter == '(' and phrase[i+1:i+2] == '.') and specialFlag:
                     specialFlag = False
                     if buffer != '':
                         line.append(buffer)
                     buffer = ''
                     line.append(letter+'.')
                     i += 1
-                elif (letter == '.' and phrase[i+1:i+2] == ')') or (letter == '.' and phrase[i+1:i+2] == '>') and not specialFlag:
+                elif (letter == '.' and phrase[i+1:i+2] == ')') and not specialFlag:
                     specialFlag = True
                     if buffer != '':
                         line.append(buffer)
                     buffer = ''
                     line.append('.'+phrase[i+1:i+2])
                     i += 1
-                elif letter == '"' or letter == "'" and specialFlag:
+                elif (letter == '<' and phrase[i+1:i+2] == '.') and specialFlag:
+                    specialFlag = False
+                    buffer = buffer + letter
+                elif (letter == '.' and phrase[i+1:i+2] == '>') and not specialFlag:
+                    specialFlag = True
+                    line.append(buffer+'.'+phrase[i+1:i+2])
+                    buffer = ''
+                    i += 1
+                elif (letter == '"' or letter == "'") and specialFlag:
                     if flag:
                         if buffer != '':
                             line.append(buffer)
@@ -84,7 +92,7 @@ class Buffer():
         words = []
         for text in file.readlines():
             line = text.split()
-            print(' '.join(line))
+            #print(' '.join(line))
             words = words + clean(' '.join(line))
         file.close()
         self.currentWord =  Node(words)
@@ -495,17 +503,17 @@ class Scanner():
         corchetesC = DFA("]")
         llaveA = DFA("{")
         llaveC = DFA("}")
-        atrLeft = DFA("< .")
-        atrRight = DFA(". >")
         semLeft = DFA("'(' .")
         semRight = DFA(". ')'")
         orDFA = DFA("|") 
         attributes =  DFA("< .{ANY}. >")
         semAction =  DFA("'(' .{ANY}. ')'")
+        identExtra = DFA("ident < .{ANY}. >", {'ident': self.ident})
 
         M = {
             'E': [
-                (self.string, ['T',"E'"]), 
+                (self.string, ['T',"E'"]),
+                (identExtra,['T',"E'"]), 
                 (self.ident, ['T',"E'"]), 
                 (self.char, ['T',"E'"]), 
                 (llaveA, ['T',"E'"]), 
@@ -522,7 +530,8 @@ class Scanner():
                 (self.period, [])
                 ],
             'T': [
-                (self.string, ['F', "T'"]), 
+                (self.string, ['F', "T'"]),
+                (identExtra,['F', "T'"]), 
                 (self.ident, ['F', "T'"]), 
                 (self.char, ['F', "T'"]), 
                 (llaveA, ['F', "T'"]), 
@@ -532,6 +541,7 @@ class Scanner():
                 ],
             "T'": [
                 (self.string, ['F', "T'"]), 
+                (identExtra,['F', "T'"]), 
                 (self.ident, ['F', "T'"]), 
                 (self.char, ['F', "T'"]), 
                 (llaveA, ['F', "T'"]), 
@@ -546,54 +556,35 @@ class Scanner():
                 (self.period, []), 
                 ],
             'F': [
-                (self.string, ['S', 'A']), 
-                (self.ident, ['S', 'A']), 
-                (self.char, ['S', 'A']), 
+                (self.string, ['S']),
+                (identExtra,['S']), 
+                (self.ident, ['S']), 
+                (self.char, ['S']), 
                 (parentesisA, ['(', 'E', ')']), 
                 (corchetesA, ['[', 'E', ']']), 
                 (llaveA, ['{', 'E', '}']),
-                (semLeft, ['X']), 
-                #(.
+                (semLeft, ['(.', 'x', '.)']), 
                 ],
             'S': [
                 (self.string, ['s']), 
-                (self.identExtra, ['ia']), 
+                (identExtra, ['ia']), 
                 (self.ident, ['i']), 
                 (self.char, ['c']),
-                ],
-            'A': [
-                (self.string, []), 
-                (self.ident, []), 
-                (self.char, []), 
-                (parentesisA, []), 
-                (corchetesA, []), 
-                (llaveA, []),
-                (semLeft, []), 
-                (parentesisC, []), 
-                (corchetesC, []), 
-                (llaveC, []), 
-                (self.period, []), 
-                (atrLeft, ['<.', 'a', '.>']), 
-                ],
-            'X': [
-                (semLeft, ['(.', 'x', '.)']), 
                 ],
         }
 
         while token.code < 50:
             token = self.scan()
-            if state == 0 and self.ident.check(token.val):
-                name = token.val
-                token = self.peek()
+            if state == 0 and (self.ident.check(token.val) or identExtra.check(token.val)):
                 production = {}
-                production['atributes'] = ''
+                if self.ident.check(token.val):
+                    name = token.val +'()'
+                else:
+                    name = token.val.replace('<.', '(').replace('.>',')')
+                    production['return'] = ','.join(re.findall(r'ref+\s([\w\.-]+)', name))
+                    name = name.replace('ref','').replace(' ','')
+                token = self.peek()
                 production['actions'] = ''
-                if atrLeft.check(token.val):
-                    token = self.scan()
-                    token = self.scan()
-                    production['atributes'] = token.val
-                    token = self.scan()
-                    token = self.peek()
                 if semLeft.check(token.val):
                     token = self.scan()
                     token = self.scan()
@@ -607,25 +598,58 @@ class Scanner():
                 token = self.peek()
 
             elif state == 2 and self.period.check(token.val):
+                """
+                test = Node(M, terminals)
+                test.generateTree(stack=['E', '.'], inputs=values + ['.'])
+                """
                 inputs = values + ['.']
                 a = inputs[0]
                 stack = ['E', '.']
                 x = stack[0]
                 error = True
                 dependencies = []
+                whileCount = 0
+                ifCount = 0
                 while 0 < len(stack) and error:
                     if x in ['i', 'ia', 's', 'c', 'a', 'x', '|', '(', ')', '[', ']', '{', '}', '<.', '.>', '(.', '.)']:
                         terminal = stack.pop(0)
-                        value = inputs.pop(0)
+                        value = [inputs.pop(0)]
+                        if 'content' in production.keys():
+                            production['content'] = production['content'] + [x] + ['\n']
+                        else:
+                            production['content'] = [x] + ['\n']
+                        '''
+                        ident = ['\t'*(whileCount+ifCount)]
                         if x == 'i':
-                            value = value+'()'
-                        if x == 'ia':
-                            value = value
+                            value = ["Get(%s)" % value[0]]
+                        elif x == 'ia':
+                            word = value[0].replace('<.', '(').replace('.>',')')
+                            value = [','.join(re.findall(r'ref+\s([\w\.-]+)', word)) + ' = ' + word.replace('ref','').replace(' ','')]
+
+                        elif x == 's' or x == 'c':
+                            value = ['Get(%s)' % (value[0])]
+                        elif x == '{': #
+                            value = ['while(True):']
+                            whileCount += 1
+                        elif x == '}':
+                            value = ['break']
+                            whileCount -= 1
+                        elif x == '[': #
+                            value = ['if(Expect()):']
+                            ifCount += 1
+                        elif x == ']':
+                            value = []
+                            ifCount -= 1
+                        
+                        if ident != ['']:
+                            value = ident + value
                         if x not in ['<.', '.>', '(.', '.)']:
+
                             if 'content' in production.keys():
-                                production['content'] = production['content'] + [value]
+                                production['content'] = production['content'] + value + ['\n']
                             else:
-                                production['content'] = [value]
+                                production['content'] = value + ['\n']
+                        '''
                         a = inputs[0]
                     elif x in M.keys():
                         for option in M[x]:
@@ -637,9 +661,11 @@ class Scanner():
                         error = False
 
                     x = stack[0]
-                    #print(stack)
-                    #print(inputs)
+                    print(stack)
+                    print(inputs)
+                    print()
                     #input()
+
                 if error:
                     print('error')
                 else:
@@ -701,6 +727,7 @@ class Scanner():
             print('COMPILER ended')
         else:
             print("unexpected compiler name")
+        return self.characters, self.keywords, self.tokens, self.productions
     
     def scan(self):
         token = self.buffer.read()
@@ -712,99 +739,25 @@ class Scanner():
     def resetPeek(self):
         self.buffer.resetPeek()
     
-    def test(self, file):
-        file = open(file, 'r')
-        words = []
-        for text in file.readlines():
-            line = text.split()
-        file.close()
-        test = 'abcdef1234567asddasd'
-        tokens = {
-            'letter': DFA('a!b!c'),
-            'digit': DFA('0!1!2!3'),
-        }
-        i = 0
-        buff = ''
-        while i < len(test):
-            buff = buff + test[i]
-            for ident in tokens.keys():
-                if tokens[ident].check(buff):
-                    print('<',ident,',',test[i],'>')
-                    buff = ''
-            i += 1
-
-    def translate(self, target, inputFile):
-        def characters(f):
-            f.write("#CHARACTERS\n")
-            for key in self.characters.keys():
-                values = []
-                for value in self.characters[key]:
-                    values = values + [value.__repr__()[1:-1]]
-                if values != '':
-                    f.write("%s = DFA('%s')\n" % (key ,'!'.join(list(values))))
-                    f.write('\n')
-            f.write("\n")
-        
-        def keywords(f):
-            f.write("#KEYWORDS\n")
-            f.write("keywords = {}\n")
-            for key in self.keywords.keys():
-                f.write('keywords["%s"] = "%s"\n' % (key, self.keywords[key]))
-            f.write("\n")
-        
-        def tokens(f):
-            f.write("#TOKENS\n")
-            for key in self.tokens.keys():
-                dependencies = ''
-                for char in self.tokens[key][2]:
-                    if dependencies == '':
-                        dependencies = "'"+char+"': "+char
-                    else:
-                        dependencies = dependencies+", '"+char+"': "+char
-                f.write("%s = DFA('%s', {%s})\n" % (key, ''.join(self.tokens[key][1]), dependencies))
-            f.write("\n")
-            f.write("tokens = {")
-            for key in self.tokens.keys():
-                f.write("'%s': (%s, 'A', [], %r)," % (key, key, self.tokens[key][0]))
-            f.write("}")
-            f.write("\n")
-
-        
-        def readFile():
-            f.write("file = open('%s', 'r')\n" % (inputFile))
-            f.write("text = Node(''.join(file.read().splitlines()))\n")
-            f.write("file.close()\n")
-        
-        f = open('./%s.py' % (target), "w")
-        f.write("from utils.dfa import DFA\n")
-        f.write("from utils.evaluate import evaluate, Node\n")
-        f.write("\n")
-        if self.characters != {}:
-            characters(f)
-        if self.keywords != {}:
-            keywords(f)
-        if self.tokens != {}:
-            tokens(f)
-        if self.productions != {}:
-            print("productions to write")
-        readFile()
-        f.write("evaluate(text, tokens, keywords)\n")
-        f.close()
-    
     def goCharacters(self):
         f = open('./testGoal.py', "w")
         for name in self.productions.keys():
-            f.write("def %s(%s):\n" % (name, self.productions[name]['atributes']))
+            f.write("def %s:\n" % (name))
             for line in self.productions[name]['content']:
-                f.write("\t%s\n" % (line))
+                if line != '':
+                    f.write("\t%s" % (line))
+            if 'return' in self.productions[name]:
+                f.write("\treturn %s\n" % self.productions[name]['return'])
             f.write("\n")
+            
         f.close()
     
 
 def main():
     scanner = Scanner("./tests/test1.txt")
-    scanner.COMPILER()
+    (c, k, t, p) = scanner.COMPILER()
     #scanner.goCharacters()
-    #scanner.translate('target', './inputs/input1.txt')
+    #translator = Translator(c, k, t, p)
+    #translator.translate('target', './inputs/input1.txt')
 
 main()

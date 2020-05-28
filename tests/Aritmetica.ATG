@@ -27,21 +27,22 @@ Stat = 							(.int value;.)
 	Expression<. ref value.>		(.System.Console.WriteLn(value.ToString());.)
 	.
 
-Expression<.ref int result.> =		(.int result1,result2;.)
+Expression<.ref result.> =		(.int result1,result2;.)
 	Term<. ref result1.>
 	{    "+"Term<. ref result2.>		(.result1+=result2;.)
 	   | "-"Term<. ref result2.>		(.result1-=result2;.)
 	}							(.result=result1;.)
+	(. return valor .)
 	.
 
-Term<.ref int result.>=				(.int result1,result2;.)
+Term<.ref result.>=				(.int result1,result2;.)
 	Factor<.ref result1.>
 	{    "*"Factor<.ref result2.>	(.result1*=result2;.)
 	   | "/"Factor<.ref result2.>	(.result1/=result2;.)
 	}							(.result=result1;.)
 	.
 	
-Factor<.ref int result.> =	(.int signo=1;.)
+Factor<.ref result.> =	(.int signo=1;.)
 	["-"(.signo = -1;.)]
 	( Number<.ref result.> | "("Expression<. ref result.>")") (.result*=signo;.).
 	

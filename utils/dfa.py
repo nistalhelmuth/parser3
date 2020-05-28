@@ -104,7 +104,7 @@ class Node():
     def evaluate(self, followtable, language):
         transitions = {}
         Dstates = [self.firstpos]
-        letters = 'ABCDEFGHIJKLMOPQR'
+        letters = 'ABCDEFGHIJKLMOPQRSTUVWX'
         count = 0
         while count < len(Dstates):
             S = Dstates[count]
@@ -114,13 +114,14 @@ class Node():
                     if (letter, p) in followtable.keys():
                         A = followtable[(letter, p)]
                         U = U.union(A)
-                if U not in Dstates:
-                    Dstates.append(U)
+                if len(U) != 0:
+                    if U not in Dstates:
+                        Dstates.append(U)
 
-                if letters[count] in transitions.keys():
-                    transitions[letters[count]][letter] =  letters[Dstates.index(U)]
-                else:
-                    transitions[letters[count]] = {letter: letters[Dstates.index(U)]}
+                    if letters[count] in transitions.keys():
+                        transitions[letters[count]][letter] =  letters[Dstates.index(U)]
+                    else:
+                        transitions[letters[count]] = {letter: letters[Dstates.index(U)]}
             count += 1
         return transitions, Dstates, letters[:count]
 
@@ -210,19 +211,37 @@ class DFA:
         self.start = states[0]
         
     def get_core(self):
+        #print(self.start)
+        #print(self.states)
+        #print(self.language)
+        #print(self.transitions)
+        #print(self.accept)
+        #print(self.groups)
+
         drawPrettyGraph([self.start], self.states, self.transitions, self.accept, 'dfa2')
         return self.start, self.states, self.language, self.transitions, self.accept, self.groups
     
     def check(self, expre):
         def new_move(state, transitions, value):
             any_atr = set(strDefinition.printable)
-            table = {'noQuote': set(strDefinition.printable).difference(set('"')), 'noApostrophe': set(strDefinition.printable).difference(set("'")), 'ANY': any_atr}
+            table = {
+                'noQuote': set(strDefinition.printable).difference(set('"')),
+                'noApostrophe': set(strDefinition.printable).difference(set("'")),
+                'ANY': any_atr
+            }
 
-            for key in transitions[state].keys():
-                if key in table.keys() and value in table[key]:
-                    return transitions[state][key]
-            if value in transitions[state].keys():
-                return transitions[state][value]
+            # value = a
+            if state in transitions.keys():
+                if value in transitions[state].keys():
+                    return transitions[state][value]
+                else:
+                    for key in transitions[state].keys():
+                        if key in table.keys() and value in table[key]:
+                            return transitions[state][key]
+
+            #for key in transitions[state].keys():
+            #    if key in table.keys() and value in table[key]:
+            #        return transitions[state][key]
             
             return -1
 
@@ -254,12 +273,12 @@ class DFA:
             return s,True
         return s,False
 
-
-#attributes = DFA("'(' .")
+#letter = DFA('a!b!c!d!e!f!g!h!i!j!k!l!m!n!o!p!q!r!s!t!u!v!w!x!y!z!A!B!C!D!E!F!G!H!I!J!K!L!M!N!O!P!Q!R!S!T!U!V!W!X!Y!Z')
+#digit = DFA('0!1!2!3!4!5!6!7!8!9')
+#ident = DFA('letter{letter!digit}', {'letter': letter, 'digit': digit})
+#ident.get_core()
+#attributes =  DFA("ident < .{ANY}. >", {'ident': ident})
 #attributes.get_core()
-#startCHR = DFA("C H R '(' number* ')'", {'number': DFA('1!2!3')})
-#startCHR.get_core()
-#test = DFA("{ANY}")
-#attributes = DFA("(< . a . >)")
-#attributes.get_core()
-#semAction = DFA('"(." a ".)"')
+#print(attributes.check('Expression<.ref value.>'))
+#myany = DFA('{ANY}')
+#print(myany.check('a<.result.>'))

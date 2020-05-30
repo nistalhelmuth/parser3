@@ -17,6 +17,8 @@ class Node():
     def __init__ (self, tree, terminals):
         self.tree = tree
         self.terminals = terminals
+        self.first = set()
+        self.follow = set()
         self.name = None
         self.value = None
         self.childs = []
@@ -25,10 +27,7 @@ class Node():
         productions = ['E', '.'] ['F', "T'"] ['{', 'E', '}']
         values = ['number', '(.', 'result = int.Parse(lastToken.Value)', '.)', '.']
     '''
-    def generateTree(self, stack, inputs):
-        if stack == ['.']:
-            return stack, inputs
-        #print(stack, inputs)
+    def generateTree(self, stack=['E', '.'], inputs=['.']):
         x = stack[0]
         a = inputs[0]
         if x in self.terminals:
@@ -47,36 +46,38 @@ class Node():
         
         return stack, inputs
     
-    def calculateFirst(self, first={}):
-        print(self.name, self.value)
-        if self.value in self.terminals:
-            if self.name in first.keys():
-                first[self.name] = first[self.name].union(set([self.value]))
-            else:
-                first[self.name] = set([self.value])
-        else:
-            if self.name in first.keys():
-                first[self.name] = first[self.name].union(set(self.childs[0].calculateFirst(first)))
-            else:
-                first[self.name] = set(self.childs[0].calculateFirst(first))
-            #test =  
-            #print(test)
-        return first
+    def calculateFirst(self):
+        if self.name not in ['|', '[', '(', '(.', 'x', '.)', '{'] and self.name in self.terminals:
+            self.first.add(self.value)
+            return self.first
+        for child in self.childs:
+            first = child.calculateFirst()
+            if self.childs[0].name == "F'" and child.name == "T'":
+                self.first = self.childs[0].first.union(first)
+            if child.name == "E'" or child.name == 'F':
+                self.first = self.first.union(first)
+            if len(first) != 0 and len(self.first) == 0:
+                self.first = first
+        return self.first
 
-    def calculateFollow(self, nonterminals = {'E': ['$'], "E'": [], 'T': [], "T'": [], 'F': [], 'S': []}):        
-        print(self.tree['E'])
-        table = {}
-
+    def calculateFollow(self):
+        if self.name in self.terminals:
+            return
+        for i in range(len(self.childs)):
+            child = self.childs[i]
+            child.calculateFollow()
+            if child.name not in self.terminals and (i+1) < len(self.childs):
+                child.follow = self.childs[i+1].first
 
     def translate(self):
         if self.name == 'i':
-            return ["Get(%s)" % self.value]
+            return ["Get(%s)" % self.first]
         elif self.name == 's' or self.name == 'c':
-            return ['Get(%s)' % (self.value)]
+            return ['Get(%s)' % (self.first)]
         elif self.name == '{': #
-            return ['while(Get(%s)):' % self.childs[1].follow]
+            return ['while(Get(%s)):' % self.follow]
         elif self.name == '[': #
-            return ['if(Get(%s)):' % self.childs[1].follow]
+            return ['if(Get(%s)):' % self.follow]
         elif self.name in self.terminals:
             return [self.value]
         words = []
@@ -129,7 +130,7 @@ data = {
         (char, ['F', "T'"]), 
         (llaveA, ['F', "T'"]), 
         (parentesisA, ['F', "T'"]), 
-        (corchetesA, ['F', "T'"]),
+        (corchetesA, ["F'", "T'"]),
         (semLeft, ['F', "T'"])
         ],
     "T'": [
@@ -139,7 +140,7 @@ data = {
         (char, ['F', "T'"]), 
         (llaveA, ['F', "T'"]), 
         (parentesisA, ['F', "T'"]), 
-        (corchetesA, ['F', "T'"]), 
+        (corchetesA, ["F'", "T'"]), 
         (semLeft, ['F', "T'"]),
         (parentesisC, []), 
         (corchetesC, []), 
@@ -158,6 +159,9 @@ data = {
         (llaveA, ['{', 'E', '}']),
         (semLeft, ['(.', 'x', '.)']), 
         ],
+    "F'": [
+        (corchetesA, ['[', 'E', ']']), 
+    ],
     'S': [
         (string, ['s']), 
         (identExtra, ['ia']), 
@@ -169,8 +173,10 @@ data = {
 test = Node(data, ['i', 'ia', 's', 'c', 'a', 'x', '|', '(', ')', '[', ']', '{', '}', '<.', '.>', '(.', '.)'])
 #test.generateTree(['E', '.'], ['[', '"-"', ']', "tests", '.'])
 #test.generateTree(['E', '.'], ['[','[', '"-"', ']',']', "tests", '.'])
-#test.generateTree(['E', '.'], ['(.', 'int signo=1;', '.)', '[', '"-"', ']', '(', 'Number<.ref result.>', '|', '"("', 'Expression<. ref result.>', '")"', ')', '.'])
-test.generateTree(['E', '.'], ['number', '(.', 'result = int.Parse(lastToken.Value)', '.)', '.'])
+test.generateTree(inputs=['(.', 'a', '.)', '{', '"*"', 'Factor<.ref result2.>', '(.', 'a', '.)', '|', '"/"', 'Factor<.ref result2.>', '(.', 'a', '.)', '}', '(.', 'result=result1;', '.)', '.'])
+#test.generateTree(['E', '.'], ['number', '|', 'test', '(.', 'result = int.Parse(lastToken.Value)', '.)', '.'])
+#test.generateTree(['E', '.'], ['(', 'Number<.ref result.>', '|', '"("', 'Expression<. ref result.>', '")"', ')', '.'])
 print(test.calculateFirst())
-#test.calculateFollow()
+print(test.first)
+test.calculateFollow()
 #print(test.translate())

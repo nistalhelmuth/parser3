@@ -1,6 +1,13 @@
 COMPILER Aritmetica    
 
 PRODUCTIONS
+
+Term<.ref result.>=				(.a.)
+	Factor<.ref result1.>
+	{    "*"Factor<.ref result2.>	(.a.)
+	   | "/"Factor<.ref result2.>	(.a.)
+	}							(.result=result1;.)
+	.
 	
 Factor<.ref result.> =	
 	["-"]

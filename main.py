@@ -536,8 +536,8 @@ class Scanner():
                 (self.char, ['F', "T'"]), 
                 (llaveA, ['F', "T'"]), 
                 (parentesisA, ['F', "T'"]), 
-                (corchetesA, ['F', "T'"]),
-                (semLeft, ['F', "T'"])
+                (semLeft, ['F', "T'"]),
+                (corchetesA, ["F'", "T'"]),
                 ],
             "T'": [
                 (self.string, ['F', "T'"]), 
@@ -545,9 +545,9 @@ class Scanner():
                 (self.ident, ['F', "T'"]), 
                 (self.char, ['F', "T'"]), 
                 (llaveA, ['F', "T'"]), 
-                (parentesisA, ['F', "T'"]), 
-                (corchetesA, ['F', "T'"]), 
                 (semLeft, ['F', "T'"]),
+                (parentesisA, ['F', "T'"]), 
+                (corchetesA, ["F'", "T'"]), 
                 (parentesisC, []), 
                 (corchetesC, []), 
                 (llaveC, []), 
@@ -557,13 +557,13 @@ class Scanner():
                 ],
             'F': [
                 (self.string, ['S']),
-                (identExtra,['S']), 
+                (identExtra, ['S']), 
                 (self.ident, ['S']), 
                 (self.char, ['S']), 
                 (parentesisA, ['(', 'E', ')']), 
-                (corchetesA, ['[', 'E', ']']), 
                 (llaveA, ['{', 'E', '}']),
                 (semLeft, ['(.', 'x', '.)']), 
+                (corchetesA, ['[', 'E', ']']), 
                 ],
             'S': [
                 (self.string, ['s']), 

@@ -448,7 +448,10 @@ class Scanner():
                         value = inputs.pop(0)
                         if x == 'i' and value not in dependencies:
                             dependencies = dependencies + [value]
-                        token = token + [value]
+                        if x == '|':
+                            token = token + ['!']
+                        else:
+                            token = token + [value]
                         a = inputs [0]
                     elif x in M.keys():
                         for option in M[x]:
@@ -581,13 +584,18 @@ class Scanner():
             token = self.scan()
             if state == 0 and (self.ident.check(token.val) or identExtra.check(token.val)):
                 production = {}
-                production['return'] = ''
                 if self.ident.check(token.val):
-                    name = token.val +'(self)'
+                    name = token.val
+                    params = '(self)'
                 else:
-                    name = token.val.replace('<.', '(').replace('.>',')')
-                    production['return'] = ','.join(re.findall(r'ref+\s([\w\.-]+)', name))
-                    name = name.replace('ref','').replace(' ','')
+                    index = token.val.find('<.')
+
+                    name = token.val[:index]
+                    params = '(self, '+token.val[index:].replace('<.', '').replace('.>',')')
+                    production['return'] = ','.join(re.findall(r'ref+\s([\w\-]+)', params))
+                    params = params.replace('ref','').replace(' ','')
+
+                production['params'] = params
 
                 token = self.peek()
                 production['actions'] = ''
@@ -609,9 +617,9 @@ class Scanner():
                 test.generateTree(['E', '.'], values + ['.'])
                 #test.calculateFirst()
                 #test.calculateFollow()
-                #production['content'] = test.translate()
-                #print(production)
-                productions[name] = test
+                production['content'] = test
+                print(production)
+                productions[name] = production
                 print('PRODUCTION', name, 'ADDED')
                 
                 state = 0
@@ -683,19 +691,40 @@ class Scanner():
     
     def goCharacters(self):
         f = open('./testGoal.py', "w")
-        f.write("class PRODUCTIONS():\n")
+        f.write('from utils.evaluate import Node\n')
+        f.write("\n")
+        f.write('class PRODUCTIONS():\n')
+        f.write("\tdef __init__(self, tokens):\n")
+        f.write("\t\tself.currentToken =  Node(tokens)\n")
+        f.write("\t\tself.nextToken = self.currentToken\n")
+        f.write("\n")
+        f.write("\tdef Expect(self, dfa):\n")
+        f.write("\t\ttoken = self.nextToken.value\n")
+        f.write("\t\tif dfa.check(token):\n")
+        f.write("\t\t\treturn True\n")
+        f.write("\t\treturn False\n")
+        f.write("\n")
+        f.write("\tdef Get(self, dfa):\n")
+        f.write("\t\ttoken = self.currentToken.value\n")
+        f.write("\t\tself.currentToken = self.currentToken.next\n")
+        f.write("\t\tself.nextToken = self.currentToken\n")
+        f.write("\t\tif dfa.check(token):\n")
+        f.write("\t\t\treturn token\n")
+        f.write("\t\treturn False\n")
+        f.write("\n")
+
+        firsts = {}
+        for name in list(self.productions.keys())[::-1]:
+            firsts[name] = self.productions[name]['content'].calculateFirst(firsts)
+        print(firsts)
         for name in self.productions.keys():
-            self.productions[name].calculateFirst()
-            self.productions[name].calculateFollow()
-            words = self.productions[name].translate2()[0]
-            f.write("\tdef %s:\n" % (name))
+            self.productions[name]['content'].calculateFollow()
+            words = self.productions[name]['content'].translate2()[0]
+            f.write("\tdef %s%s:\n" % (name, self.productions[name]['params']))
             for line in words:
                 f.write("\t\t%s" % (line))
-            #for line in self.productions[name]['content']:
-            #    if line != '':
-            #        f.write("\t%s" % (line))
-            #if 'return' in self.productions[name]:
-            #    f.write("\treturn %s\n" % self.productions[name]['return'])
+            if 'return' in self.productions.keys():
+                f.write("\treturn %s\n" % (self.productions[name]['return']))
             f.write("\n")
             
         f.close()
@@ -706,6 +735,6 @@ def main():
     (c, k, t, p) = scanner.COMPILER()
     scanner.goCharacters()
     #translator = Translator(c, k, t, p)
-    #translator.translate('target', './inputs/input1.txt')
+    #translator.translate('target', './inputs/sum.txt')
 
 main()

@@ -30,12 +30,26 @@ class LL():
             print("error parsing production")
         return stack, inputs
     
-    def calculateFirst(self):
-        if self.name not in ['|', '[', '(', '(.', 'x', '.)', '{'] and self.name in self.terminals:
+    def calculateFirst(self, firsts):
+        if self.name == 'ia':
+            index = self.value.find('<.')
+            name = self.value[:index]
+            if name in firsts.keys():
+                self.first = self.first.union(firsts[name])
+            else:
+                self.first.add(self.value)
+        elif self.name == 'i':
+            if self.value in firsts.keys():
+                self.name = 'ia'
+                self.first = self.first.union(firsts[self.value])
+            else:
+                self.first.add(self.value)
+        
+        elif self.name not in ['|', '[', '(', '(.', 'x', '.)', '{'] and self.name in self.terminals:
             self.first.add(self.value)
             return self.first
         for child in self.childs:
-            first = child.calculateFirst()
+            first = child.calculateFirst(firsts)
             if self.childs[0].name == "F'" and child.name == "T'":
                 self.first = self.childs[0].first.union(first)
             if child.name == "E'" or child.name == 'F':
@@ -58,30 +72,34 @@ class LL():
         values = []
         if self.name == 'i' or self.name == 's' or self.name == 'c':
             for element in list(self.first):
-                values.append("%sGet(%s)\n" % (tabString , element))
+                values.append("%sself.Get(%s)\n" % (tabString , element))
         elif self.name == 'ia':
-            line = self.value.replace('<.', '(').replace('.>',')').replace('ref','').replace(' ','')
-            ref = ','.join(re.findall(r'ref+\s([\w\-]+)', self.value))
+            if self.value.find('<.') > -1:
+                line = self.value.replace('<.', '(').replace('.>',')').replace('ref','').replace(' ','')
+                ref = ','.join(re.findall(r'ref+\s([\w\-]+)', self.value)) + ' = '
+            else:
+                line = self.value+'()'
+                ref = ''
 
-            values.append(('%s%s = self.%s\n') % (tabString, ref, line))
+            values.append(('%s%sself.%s\n') % (tabString, ref, line))
         elif self.name == '{': #
             tabs += 1
             expression = []
             for element in list(self.follow):
-                expression.append('Expect(%s)' % element)
+                expression.append('self.Expect(%s)' % element)
             values = ['%swhile(%s):\n' % (tabString, ' or '.join(expression))]
         elif self.name == '[': 
             tabs += 1
             expression = []
             for element in list(self.follow):
-                expression.append('Expect(%s)' % element)
+                expression.append('self.Expect(%s)' % element)
             values = ['%sif(%s):\n' % (tabString, ' or '.join(expression))]
         elif self.name == '|': #
             tabString = '\t'*(tabs-1)
             expression = []
             for element in list(self.follow):
-                expression.append('Expect(%s)' % element)
-            values = ['%sif(%s):\n' % (tabString, ' or '.join(expression))]
+                expression.append('self.Expect(%s)' % element)
+            values = ['%selif(%s):\n' % (tabString, ' or '.join(expression))]
         elif self.name in [']', '}']:
             tabs -= 1
             values = ['\n']
@@ -97,7 +115,7 @@ class LL():
                 tabs += 1
                 expression = []
                 for element in list(self.childs[0].first):
-                    expression.append('Expect(%s)' % element)
+                    expression.append('self.Expect(%s)' % element)
                 values = ['%sif(%s):\n' % (tabString, ' or '.join(expression))]
             for child in self.childs:
                 vals, tabs = child.translate2(tabs)

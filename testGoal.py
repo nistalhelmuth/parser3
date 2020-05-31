@@ -1,61 +1,83 @@
+from utils.evaluate import Node
+
 class PRODUCTIONS():
+	def __init__(self, tokens):
+		self.currentToken =  Node(tokens)
+		self.nextToken = self.currentToken
+
+	def Expect(self, dfa):
+		token = self.nextToken.value
+		if dfa.check(token):
+			return True
+		return False
+
+	def Get(self, dfa):
+		token = self.currentToken.value
+		self.currentToken = self.currentToken.next
+		self.nextToken = self.currentToken
+		if dfa.check(token):
+			return token
+		return False
+
 	def Expr(self):
-		while(Expect(Stat)):
-			Get(Stat)
-			Get(";")
+		while(self.Expect("(") or self.Expect(number) or self.Expect("-")):
+			self.Stat()
+			self.Get(";")
 		
-		Get(".")
+		self.Get(".")
 
 	def Stat(self):
-		int value;		
+		value = None		
 		value = self.Expression(value)
-		System.Console.WriteLn(value.ToString());		
+		print(value)		
 
-	def Expression(result):
-		int result1,result2;		
+	def Expression(self,result):
+		result1 = None		
+		result2 = None		
 		result1 = self.Term(result1)
-		while(Expect("-") or Expect("+")):
-			if(Expect("+")):
-				Get("+")
+		while(self.Expect("+") or self.Expect("-")):
+			if(self.Expect("+")):
+				self.Get("+")
 				result2 = self.Term(result2)
-				result1+=result2;		
-			if(Expect("-")):
-				Get("-")
+				result1 += result2		
+			elif(self.Expect("-")):
+				self.Get("-")
 				result2 = self.Term(result2)
-				result1-=result2;		
+				result1 -= result2		
 		
-			result=result1;		
+			result = result1		
 
-	def Term(result):
-		int result1,result2;		
+	def Term(self,result):
+		result1 = None		
+		result2 = None		
 		result1 = self.Factor(result1)
-		while(Expect("/") or Expect("*")):
-			if(Expect("*")):
-				Get("*")
+		while(self.Expect("/") or self.Expect("*")):
+			if(self.Expect("*")):
+				self.Get("*")
 				result2 = self.Factor(result2)
-				result1*=result2;		
-			if(Expect("/")):
-				Get("/")
+				result1 *= result2		
+			elif(self.Expect("/")):
+				self.Get("/")
 				result2 = self.Factor(result2)
-				result1/=result2;		
+				result1 /= result2		
 		
-			result=result1;		
+			result = result1		
 
-	def Factor(result):
-		int signo=1;		
-		if(Expect("-")):
-			Get("-")
-			signo = -1;		
+	def Factor(self,result):
+		signo = 1		
+		if(self.Expect("-")):
+			self.Get("-")
+			signo = -1		
 		
-		if(Expect(Number<.ref result.>)):
+		if(self.Expect(number)):
 			result = self.Number(result)
-		if(Expect("(")):
-			Get("(")
+		elif(self.Expect("(")):
+			self.Get("(")
 			result = self.Expression(result)
-			Get(")")
-			result*=signo;		
+			self.Get(")")
+			result *= signo		
 
-	def Number(intresult):
-		Get(number)
-		 result = int.Parse(lastToken.Value)		
+	def Number(self,result):
+		self.Get(number)
+		result = lastToken.Value		
 

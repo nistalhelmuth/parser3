@@ -3,6 +3,7 @@ import string as strDefinition
 from utils.dfa import DFA
 from utils.evaluate import Node
 from utils.translate import Translator
+from utils.tree import LL
 import re
 
 class Token():
@@ -557,14 +558,17 @@ class Scanner():
                 ],
             'F': [
                 (self.string, ['S']),
-                (identExtra, ['S']), 
+                (identExtra,['S']), 
                 (self.ident, ['S']), 
                 (self.char, ['S']), 
                 (parentesisA, ['(', 'E', ')']), 
+                (corchetesA, ['[', 'E', ']']), 
                 (llaveA, ['{', 'E', '}']),
                 (semLeft, ['(.', 'x', '.)']), 
-                (corchetesA, ['[', 'E', ']']), 
                 ],
+            "F'": [
+                (corchetesA, ['[', 'E', ']']), 
+            ],
             'S': [
                 (self.string, ['s']), 
                 (identExtra, ['ia']), 
@@ -577,12 +581,14 @@ class Scanner():
             token = self.scan()
             if state == 0 and (self.ident.check(token.val) or identExtra.check(token.val)):
                 production = {}
+                production['return'] = ''
                 if self.ident.check(token.val):
-                    name = token.val +'()'
+                    name = token.val +'(self)'
                 else:
                     name = token.val.replace('<.', '(').replace('.>',')')
                     production['return'] = ','.join(re.findall(r'ref+\s([\w\.-]+)', name))
                     name = name.replace('ref','').replace(' ','')
+
                 token = self.peek()
                 production['actions'] = ''
                 if semLeft.check(token.val):
@@ -593,85 +599,21 @@ class Scanner():
                     token = self.peek()
                 state += 1
                 values = []
+
             elif state == 1 and self.equal.check(token.val):
                 state += 1
                 token = self.peek()
 
             elif state == 2 and self.period.check(token.val):
-                """
-                test = Node(M, terminals)
-                test.generateTree(stack=['E', '.'], inputs=values + ['.'])
-                """
-                inputs = values + ['.']
-                a = inputs[0]
-                stack = ['E', '.']
-                x = stack[0]
-                error = True
-                dependencies = []
-                whileCount = 0
-                ifCount = 0
-                while 0 < len(stack) and error:
-                    if x in ['i', 'ia', 's', 'c', 'a', 'x', '|', '(', ')', '[', ']', '{', '}', '<.', '.>', '(.', '.)']:
-                        terminal = stack.pop(0)
-                        value = [inputs.pop(0)]
-                        if 'content' in production.keys():
-                            production['content'] = production['content'] + [x] + ['\n']
-                        else:
-                            production['content'] = [x] + ['\n']
-                        '''
-                        ident = ['\t'*(whileCount+ifCount)]
-                        if x == 'i':
-                            value = ["Get(%s)" % value[0]]
-                        elif x == 'ia':
-                            word = value[0].replace('<.', '(').replace('.>',')')
-                            value = [','.join(re.findall(r'ref+\s([\w\.-]+)', word)) + ' = ' + word.replace('ref','').replace(' ','')]
-
-                        elif x == 's' or x == 'c':
-                            value = ['Get(%s)' % (value[0])]
-                        elif x == '{': #
-                            value = ['while(True):']
-                            whileCount += 1
-                        elif x == '}':
-                            value = ['break']
-                            whileCount -= 1
-                        elif x == '[': #
-                            value = ['if(Expect()):']
-                            ifCount += 1
-                        elif x == ']':
-                            value = []
-                            ifCount -= 1
-                        
-                        if ident != ['']:
-                            value = ident + value
-                        if x not in ['<.', '.>', '(.', '.)']:
-
-                            if 'content' in production.keys():
-                                production['content'] = production['content'] + value + ['\n']
-                            else:
-                                production['content'] = value + ['\n']
-                        '''
-                        a = inputs[0]
-                    elif x in M.keys():
-                        for option in M[x]:
-                            if option[0].check(a):
-                                stack.pop(0)
-                                stack = option[1] + stack
-                                break
-                    else:
-                        error = False
-
-                    x = stack[0]
-                    print(stack)
-                    print(inputs)
-                    print()
-                    #input()
-
-                if error:
-                    print('error')
-                else:
-                    print(production)
-                    productions[name] = production
-                    print('PRODUCTION', name, 'ADDED')
+                test = LL(M, ['i', 'ia', 's', 'c', 'a', 'x', '|', '(', ')', '[', ']', '{', '}', '<.', '.>', '(.', '.)'])
+                test.generateTree(['E', '.'], values + ['.'])
+                #test.calculateFirst()
+                #test.calculateFollow()
+                #production['content'] = test.translate()
+                #print(production)
+                productions[name] = test
+                print('PRODUCTION', name, 'ADDED')
+                
                 state = 0
                 token = self.peek()
             
@@ -741,13 +683,19 @@ class Scanner():
     
     def goCharacters(self):
         f = open('./testGoal.py', "w")
+        f.write("class PRODUCTIONS():\n")
         for name in self.productions.keys():
-            f.write("def %s:\n" % (name))
-            for line in self.productions[name]['content']:
-                if line != '':
-                    f.write("\t%s" % (line))
-            if 'return' in self.productions[name]:
-                f.write("\treturn %s\n" % self.productions[name]['return'])
+            self.productions[name].calculateFirst()
+            self.productions[name].calculateFollow()
+            words = self.productions[name].translate2()[0]
+            f.write("\tdef %s:\n" % (name))
+            for line in words:
+                f.write("\t\t%s" % (line))
+            #for line in self.productions[name]['content']:
+            #    if line != '':
+            #        f.write("\t%s" % (line))
+            #if 'return' in self.productions[name]:
+            #    f.write("\treturn %s\n" % self.productions[name]['return'])
             f.write("\n")
             
         f.close()
@@ -756,7 +704,7 @@ class Scanner():
 def main():
     scanner = Scanner("./tests/test1.txt")
     (c, k, t, p) = scanner.COMPILER()
-    #scanner.goCharacters()
+    scanner.goCharacters()
     #translator = Translator(c, k, t, p)
     #translator.translate('target', './inputs/input1.txt')
 

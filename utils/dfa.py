@@ -15,7 +15,7 @@ class Node():
         self.position = None
     
     def setPositions(self, positions=[]):
-        if self.label == '*':
+        if self.label == 'º':
             self.left.setPositions(positions)
             return positions
         elif self.label == '!' or self.label == '_':
@@ -38,7 +38,7 @@ class Node():
             A = self.left.setNullable()
             B = self.right.setNullable()
             self.nullable = A and B
-        elif self.label == '*':
+        elif self.label == 'º':
             self.left.setNullable()
             self.nullable = True
         elif self.label == '#':
@@ -60,7 +60,7 @@ class Node():
                 self.firstpos = B.union(A)
             else:
                 self.firstpos = A
-        elif self.label == '*':
+        elif self.label == 'º':
             self.firstpos = self.left.setFirstPos()
         elif self.label != '#':
             self.firstpos.add(self.position)
@@ -79,7 +79,7 @@ class Node():
                 self.lastpos = A.union(B)
             else:
                 self.lastpos = B
-        elif self.label == '*':
+        elif self.label == 'º':
             self.lastpos = self.left.setLastPos()
         elif self.label != '#':
             self.lastpos.add(self.position)   
@@ -95,7 +95,7 @@ class Node():
         elif self.label == '!':
             table = self.left.setFollowPos(table, dic)
             table = self.right.setFollowPos(table, dic)
-        elif self.label == '*':
+        elif self.label == 'º':
             for i in self.lastpos:
                 table[(dic[i], i)] = table[(dic[i], i)].union(self.firstpos)
             table = self.left.setFollowPos(table, dic)
@@ -134,7 +134,7 @@ class Node():
         if self.right != None and self.left != None:
             #print(self.nullable, (self.left.label, self.label, self.right.label), self.position, self.firstpos, self.lastpos, self.followpos)
             print((self.left.label, self.label, self.right.label), self.position, self.followpos)
-        elif self.label == '*':
+        elif self.label == 'º':
             #print(self.nullable, (self.left.label, self.label), self.position, self.firstpos, self.lastpos, self.followpos)
             print((self.left.label, self.label), self.position, self.followpos)
         else:
@@ -156,16 +156,16 @@ class DFA:
         stack = []
         self.language = []
         for ch in self.expre:
-            if ch == '*':
+            if ch == 'º':
                 node_A = stack.pop()
-                stack.append(Node(left=node_A,label='*'))
+                stack.append(Node(left=node_A,label='º'))
             elif ch == '_' or ch =='!':
                 node_A = stack.pop()
                 node_B = stack.pop()
                 stack.append(Node(left=node_B, label=ch, right=node_A))
             elif ch == '&': #rr+
                 node_A = stack.pop()
-                node_B = Node(left=node_A, label='*')
+                node_B = Node(left=node_A, label='º')
                 stack.append(Node(left=node_A, label='_', right=node_B))
             elif ch == '?': #r|ɛ
                 node_A = stack.pop()
@@ -182,7 +182,7 @@ class DFA:
 
         # Encuentra el lenguaje
         for letter in self.expre:
-            if letter not in self.language and letter not in '*!_#?&' and letter not in reference.keys():
+            if letter not in self.language and letter not in 'º!_#?&' and letter not in reference.keys():
                 self.language.append(letter)
         
         node_A = self.core
@@ -239,10 +239,6 @@ class DFA:
                         if key in table.keys() and value in table[key]:
                             return transitions[state][key]
 
-            #for key in transitions[state].keys():
-            #    if key in table.keys() and value in table[key]:
-            #        return transitions[state][key]
-            
             return -1
 
         
@@ -250,7 +246,7 @@ class DFA:
         for letter in expre:
             s = new_move(s, self.transitions, letter)
             if s == -1:
-                break
+                return False
         if s in self.accept:
             return True
         return False
@@ -279,12 +275,5 @@ class DFA:
             return s,True
         return s,False
 
-#letter = DFA('a!b!c!d!e!f!g!h!i!j!k!l!m!n!o!p!q!r!s!t!u!v!w!x!y!z!A!B!C!D!E!F!G!H!I!J!K!L!M!N!O!P!Q!R!S!T!U!V!W!X!Y!Z')
-#digit = DFA('0!1!2!3!4!5!6!7!8!9')
-#ident = DFA('letter{letter!digit}', {'letter': letter, 'digit': digit})
-#ident.get_core()
-#attributes =  DFA("ident < .{ANY}. >", {'ident': ident})
-#attributes.get_core()
-#print(attributes.check('Expression<.ref value.>'))
-#myany = DFA('{ANY}')
-#print(myany.check('a<.result.>'))
+#letter = DFA("'*'")
+#letter.get_core()

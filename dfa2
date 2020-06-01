@@ -3,5 +3,5 @@ digraph finite_state_machine {
 	node [shape=doublecircle]
 	B
 	node [shape=circle]
-	A -> B [label="+"]
+	A -> B [label="*"]
 }

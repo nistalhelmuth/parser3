@@ -145,6 +145,7 @@ class Scanner():
 
     def __init__(self, file):
         self.buffer = Buffer(file)
+        self.theName = None
 
         self.any = DFA('{ANY}')
         self.hexdigit = DFA('!'.join(list(set('0123456789').union(set('ABCDEF')))))
@@ -573,10 +574,10 @@ class Scanner():
                 (corchetesA, ['[', 'E', ']']), 
             ],
             'S': [
+                (self.char, ['c']),
                 (self.string, ['s']), 
                 (identExtra, ['ia']), 
                 (self.ident, ['i']), 
-                (self.char, ['c']),
                 ],
         }
 
@@ -614,9 +615,9 @@ class Scanner():
 
             elif state == 2 and self.period.check(token.val):
                 test = LL(M, ['i', 'ia', 's', 'c', 'a', 'x', '|', '(', ')', '[', ']', '{', '}', '<.', '.>', '(.', '.)'])
-                test.generateTree(['E', '.'], values + ['.'])
-                #test.calculateFirst()
-                #test.calculateFollow()
+                params = test.generateTree(['E', '.'], values + ['.'])
+                print(params[2])
+                self.tokens.update(params[2])
                 production['content'] = test
                 print(production)
                 productions[name] = production
@@ -645,7 +646,7 @@ class Scanner():
         print(token.val)
         if (self.ident.check(token.val)):
             print('COMPILER started')
-            name = token.val
+            self.theName = token.val
             token = self.scan()
             print(token.val)
             if (token.val == 'CHARACTERS'):
@@ -670,14 +671,14 @@ class Scanner():
                 print('PRODUCTIONS ended')
             if (token.val == 'END'):
                 token = self.scan()
-                if(token.val == (name+'.')):
+                if(token.val == (self.theName + '.')):
                     print("succesfully exit")
                 else:
                     print("unexpected END")
             print('COMPILER ended')
         else:
             print("unexpected compiler name")
-        return self.characters, self.keywords, self.tokens, self.productions
+        return self.characters, self.keywords, self.tokens, self.productions, self.theName
     
     def scan(self):
         token = self.buffer.read()
@@ -688,53 +689,12 @@ class Scanner():
     
     def resetPeek(self):
         self.buffer.resetPeek()
-    
-    def goCharacters(self):
-        f = open('./testGoal.py', "w")
-        f.write('from utils.evaluate import Node\n')
-        f.write("\n")
-        f.write('class PRODUCTIONS():\n')
-        f.write("\tdef __init__(self, tokens):\n")
-        f.write("\t\tself.currentToken =  Node(tokens)\n")
-        f.write("\t\tself.nextToken = self.currentToken\n")
-        f.write("\n")
-        f.write("\tdef Expect(self, dfa):\n")
-        f.write("\t\ttoken = self.nextToken.value\n")
-        f.write("\t\tif dfa.check(token):\n")
-        f.write("\t\t\treturn True\n")
-        f.write("\t\treturn False\n")
-        f.write("\n")
-        f.write("\tdef Get(self, dfa):\n")
-        f.write("\t\ttoken = self.currentToken.value\n")
-        f.write("\t\tself.currentToken = self.currentToken.next\n")
-        f.write("\t\tself.nextToken = self.currentToken\n")
-        f.write("\t\tif dfa.check(token):\n")
-        f.write("\t\t\treturn token\n")
-        f.write("\t\treturn False\n")
-        f.write("\n")
-
-        firsts = {}
-        for name in list(self.productions.keys())[::-1]:
-            firsts[name] = self.productions[name]['content'].calculateFirst(firsts)
-        print(firsts)
-        for name in self.productions.keys():
-            self.productions[name]['content'].calculateFollow()
-            words = self.productions[name]['content'].translate2()[0]
-            f.write("\tdef %s%s:\n" % (name, self.productions[name]['params']))
-            for line in words:
-                f.write("\t\t%s" % (line))
-            if 'return' in self.productions.keys():
-                f.write("\treturn %s\n" % (self.productions[name]['return']))
-            f.write("\n")
-            
-        f.close()
-    
 
 def main():
     scanner = Scanner("./tests/test1.txt")
-    (c, k, t, p) = scanner.COMPILER()
-    scanner.goCharacters()
-    #translator = Translator(c, k, t, p)
-    #translator.translate('target', './inputs/sum.txt')
+    (c, k, t, p, start) = scanner.COMPILER()
+    #scanner.goCharacters()
+    translator = Translator(c, k, t, p)
+    translator.translate('target', './inputs/sum.txt', start)
 
 main()

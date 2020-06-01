@@ -1,4 +1,4 @@
-precedence = {'*':3, '?':3, '&':3, '_':2, '!':1, ' ':2} 
+precedence = {'º':3, '?':3, '&':3, '_':2, '!':1, ' ':2} 
 
 def conversionToPostfix(expresion):
     def pop(top, array):
@@ -95,7 +95,7 @@ def conversionToPostfix(expresion):
                     a = "$"
 
                 output.append(a) 
-            output.append('*') 
+            output.append('º')
             if (not top == -1 and array[-1]  != '{'): 
                 return -1
             elif not top == -1:
@@ -106,9 +106,9 @@ def conversionToPostfix(expresion):
                 array.append('_')
         
         else: 
-            while(not top == -1 and notGreater(exp[i], array) and exp[i] != '*'): 
+            while(not top == -1 and notGreater(exp[i], array) and exp[i] != 'º'): 
                 top -= 1
-                if exp[i] != '*':
+                if exp[i] != 'º':
                     count -= 1
                 b = array.pop()
                 output.append(b) 
@@ -129,5 +129,5 @@ def conversionToPostfix(expresion):
     return output
 
 
-#print(conversionToPostfix("'(' ."))
+#print(conversionToPostfix("º"))
 #print(conversionToPostfix('< .'))

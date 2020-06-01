@@ -14,6 +14,7 @@ def evaluate(text, tokens, keywords):
     nextValue = text
     last = {}
     pull = []
+    words = []
     while currentValue.next != None:
         for name in tokens.keys():
             token = tokens[name]
@@ -48,6 +49,7 @@ def evaluate(text, tokens, keywords):
                     print('FOUND KEYWORD', keywords[last['text']])
                 else:
                     print('TOKEN FOUND', last)
+                    words.append(last['text'])
                 last = {}
             else:
                 print('ERORR WITH', currentValue.value)
@@ -56,3 +58,5 @@ def evaluate(text, tokens, keywords):
             nextValue = currentValue
         else:
             nextValue = nextValue.next
+    print(words)
+    return words

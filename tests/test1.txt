@@ -22,7 +22,7 @@ number = digit{digit}.
 
 PRODUCTIONS
 	
-Expr= {Stat (";")}".".
+Aritmetica= {Stat (";")}".".
 
 Stat = 							(.value = None.)
 	Expression<. ref value.>		(.print(value).)
@@ -48,5 +48,5 @@ Factor<.ref result.> =	(.signo = 1.)
 	["-"(.signo = -1.)]
 	( Number<.ref result.> | "("Expression<. ref result.>")") (.result *= signo.).
 	
-Number<.ref result.> =  number (.result = lastToken.Value.).
+Number<.ref result.> =  number (.result = int(self.last).).
 END Aritmetica

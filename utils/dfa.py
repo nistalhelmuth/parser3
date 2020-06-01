@@ -224,10 +224,12 @@ class DFA:
     def check(self, expre):
         def new_move(state, transitions, value):
             any_atr = set(strDefinition.printable)
+            any_atr.add('ñ')
+            any_atr.add('Ñ')
             table = {
-                'noQuote': set(strDefinition.printable).difference(set('"')),
-                'noApostrophe': set(strDefinition.printable).difference(set("'")),
-                'ANY': any_atr
+                'noQuote': any_atr.difference(set('"')), 
+                'noApostrophe': any_atr.difference(set("'")), 
+                'ANY':any_atr,
             }
 
             # value = a
@@ -254,9 +256,11 @@ class DFA:
     def slowCheck(self, letter, state = 'A'):
         def new_move(state, transitions, value):
             any_atr = set(strDefinition.printable)
+            any_atr.add('ñ')
+            any_atr.add('Ñ')
             table = {
-                'noQuote': set(strDefinition.printable).difference(set('"')), 
-                'noApostrophe': set(strDefinition.printable).difference(set("'")), 
+                'noQuote': any_atr.difference(set('"')), 
+                'noApostrophe': any_atr.difference(set("'")), 
                 'ANY':any_atr
             }
 
@@ -275,5 +279,6 @@ class DFA:
             return s,True
         return s,False
 
-#letter = DFA("'*'")
-#letter.get_core()
+#string =  DFA('"{noQuote}"')
+#string.get_core()
+#any_atr = set(strDefinition.printable)

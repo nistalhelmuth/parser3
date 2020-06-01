@@ -15,6 +15,9 @@ class LL():
     def generateTree(self, stack, inputs, newTokens={}):
         x = stack[0]
         a = inputs[0]
+        #print(stack)
+        #print(inputs)
+        #input()
         if x in self.terminals:
             self.name = stack.pop(0)
             self.value = inputs.pop(0)
@@ -32,6 +35,9 @@ class LL():
                         self.childs.append(kid)
         else:
             print("error parsing production")
+        
+        
+        
         return stack, inputs, newTokens
     
     def calculateFirst(self, firsts):

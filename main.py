@@ -25,7 +25,7 @@ class Buffer():
             i = 0
             while i < len(phrase):
                 letter = phrase[i]
-                if (letter == '(' and phrase[i+1:i+2] == '.') and specialFlag:
+                if (letter == '(' and phrase[i+1:i+2] == '.') and flag and specialFlag:
                     specialFlag = False
                     if buffer != '':
                         line.append(buffer)
@@ -47,7 +47,7 @@ class Buffer():
                     line.append(buffer+'.'+phrase[i+1:i+2])
                     buffer = ''
                     i += 1
-                elif (letter == '"' or letter == "'") and specialFlag:
+                elif letter == '"' and specialFlag:
                     if flag:
                         if buffer != '':
                             line.append(buffer)
@@ -56,6 +56,11 @@ class Buffer():
                         line.append(buffer+letter)
                         buffer= ''
                     flag = not flag
+                elif letter == "'" and phrase[i+2:i+3] == "'" and specialFlag:
+                    if buffer != '':
+                        line.append(buffer)
+                    line.append(phrase[i:i+3])
+                    buffer= ''
                 elif (letter == '(' or letter == '[' or letter == '{' or letter == '|' or letter == ')' or letter == ']' or letter == '}') and flag and specialFlag:
                     if buffer != '':
                         line.append(buffer)
@@ -94,8 +99,10 @@ class Buffer():
         for text in file.readlines():
             line = text.split()
             #print(' '.join(line))
-            words = words + clean(' '.join(line))
+            if len(line) > 0:
+                words = words + clean(' '.join(line))
         file.close()
+        print(len(words))
         self.currentWord =  Node(words)
         self.nextWord = self.currentWord
     
@@ -691,9 +698,9 @@ class Scanner():
         self.buffer.resetPeek()
 
 def main():
-    scanner = Scanner("./tests/test1.txt")
+    #scanner = Scanner("./tests/LittleCoColFinal.ATG")
+    scanner = Scanner("./tests/test3.txt")
     (c, k, t, p, start) = scanner.COMPILER()
-    #scanner.goCharacters()
     translator = Translator(c, k, t, p)
     translator.translate('target', './inputs/sum.txt', start)
 

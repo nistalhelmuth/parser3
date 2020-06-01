@@ -1,4 +1,7 @@
 import copy
+import sys
+
+sys.setrecursionlimit(10000)
 
 class Node():
     def __init__(self, words):

@@ -161,7 +161,7 @@ class Scanner():
         self.ident = DFA('letter{letter!digit}', {'letter': self.letter, 'digit': self.digit})
         self.string =  DFA('"{noQuote}"')
         self.number =  DFA('digit{digit}', {'digit': self.digit})
-        self.char =  DFA("' noApostrophe '")
+        self.char =  DFA("'noApostrophe'")
         self.equal =  DFA("=")
         self.period =  DFA(".")
         self.plus =  DFA("+")
@@ -191,9 +191,8 @@ class Scanner():
         token = self.peek()
         state = 0
 
-        periods = DFA('. .')
-        #startCHR = DFA("C H R '(' number* ')'", {'number': self.number})
-        startCHR = DFA("C H R")
+        periods = DFA('._.')
+        startCHR = DFA('C_H_R')
         signs = DFA('+!-')
         Char = DFA("char!Char", {'char': self.char, 'Char': startCHR})
         basicset = DFA('string!ident!Char[".." Char]', {'string': self.string, 'ident': self.ident, 'Char':Char})
@@ -259,7 +258,7 @@ class Scanner():
                             character = set(value[1:-1])
                         elif x == 'n':
                             #character = set(chr(int(value[4:-1])))
-                            character = set(chr(int(value)))
+                            character = set("%s"%chr(int(value)))
                         
                         if x in ['+','-','..']:
                             operator = x
@@ -515,12 +514,12 @@ class Scanner():
         corchetesC = DFA("]")
         llaveA = DFA("{")
         llaveC = DFA("}")
-        semLeft = DFA("'(' .")
-        semRight = DFA(". ')'")
+        semLeft = DFA("'('_.")
+        semRight = DFA("._')'")
         orDFA = DFA("|") 
-        attributes =  DFA("< .{ANY}. >")
-        semAction =  DFA("'(' .{ANY}. ')'")
-        identExtra = DFA("ident < .{ANY}. >", {'ident': self.ident})
+        attributes =  DFA("<_.{ANY}._>")
+        semAction =  DFA("'('_.{ANY}._')'")
+        identExtra = DFA("ident_<_.{ANY}._>", {'ident': self.ident})
 
         M = {
             'E': [
@@ -699,7 +698,7 @@ class Scanner():
 
 def main():
     #scanner = Scanner("./tests/LittleCoColFinal.ATG")
-    scanner = Scanner("./tests/test3.txt")
+    scanner = Scanner("./tests/test2.txt")
     (c, k, t, p, start) = scanner.COMPILER()
     translator = Translator(c, k, t, p)
     translator.translate('target', './inputs/sum.txt', start)

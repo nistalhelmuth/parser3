@@ -279,6 +279,7 @@ class DFA:
             return s,True
         return s,False
 
-#string =  DFA('"{noQuote}"')
+#string =  DFA('._._.')
 #string.get_core()
-#any_atr = set(strDefinition.printable)
+#print(string.check('CHR'))
+#print(string.check('\t'))

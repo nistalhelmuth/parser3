@@ -32,7 +32,11 @@ class Translator():
                     dependencies = "'"+char+"': "+char
                 else:
                     dependencies = dependencies+", '"+char+"': "+char
-            f.write('%s = DFA("%s", {%s})\n' % (key, ''.join(self.tokens[key][1]), dependencies))
+            value = ''.join(self.tokens[key][1])
+            if '"' in value:
+                f.write("%s = DFA('%s', {%s})\n" % (key, value, dependencies))
+            else:
+                f.write('%s = DFA("%s", {%s})\n' % (key, value, dependencies))
         f.write("\n")
         f.write("tokens = {")
         for key in self.tokens.keys():
@@ -82,7 +86,6 @@ class Translator():
         f = open('./%s.py' % (target), "w")
         f.write("from utils.dfa import DFA\n")
         f.write("from utils.evaluate import evaluate, Node\n")
-        f.write('from utils.evaluate import Node\n')
         f.write("\n")
         if self.characters != {}:
             self.CHARACTERS(f)

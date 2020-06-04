@@ -21,32 +21,29 @@ number = digit{digit}.
 
 PRODUCTIONS
 
-Expr= {Stat (";")}".".
+Aritmetica= {Stat (";")}".".
 
-Stat = 							(.value = None.)
-	Expression<. ref value.>		(.print(value).)
+Stat = 							(.int value;.)
+	Expression<. ref value.>		(.System.Console.WriteLn(value.ToString());.)
 	.
 
-Expression<.ref result.> =		(.result1 = None.)
-  (.result2 = None.)
-	Term<.ref result1.>
-	{    "+"Term<.ref result2.>		(.result1 += result2.)
-	   | "-"Term<.ref result2.>		(.result1 -= result2.)
-	}							(.result = result1.)
+Expression<.ref int result.> =		(.int result1,result2;.)
+	Term<. ref result1.>
+	{    "+"Term<. ref result2.>		(.result1+=result2;.)
+	   | "-"Term<. ref result2.>		(.result1-=result2;.)
+	}							(.result=result1;.)
 	.
 
-Term<.ref result.>=				(.result1 = None.)
-  (.result2 = None.)
+Term<.ref int result.>=				(.int result1,result2;.)
 	Factor<.ref result1.>
-	{    "*"Factor<.ref result2.>	(.result1 *= result2.)
-	   | "/"Factor<.ref result2.>	(.result1 /= result2.)
-	}							(.result = result1.)
+	{    "*"Factor<.ref result2.>	(.result1*=result2;.)
+	   | "/"Factor<.ref result2.>	(.result1/=result2;.)
+	}							(.result=result1;.)
 	.
 	
-Factor<.ref result.> =	(.signo = 1.)
-	["-"(.signo = -1.)]
-	( Number<.ref result.> | "("Expression<. ref result.>")") (.result *= signo.).
+Factor<.ref int result.> =	(.int signo=1;.)
+	["-"(.signo = -1;.)]
+	( Number<.ref result.> | "("Expression<. ref result.>")") (.result*=signo;.).
 	
-Number<.ref result.> =  number (.result = lastToken.Value.).
-
+Number<.ref int result.> =  number (. result = int.Parse(lastToken.Value).).
 END Aritmetica

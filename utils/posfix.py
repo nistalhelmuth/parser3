@@ -23,14 +23,17 @@ def conversionToPostfix(expresion):
     #exp = '_'.join(expresion.split())
     i = 0
     #print('%r' % exp)
+    count = 0
     while i < len(exp):
         #print(ord(exp[i]))
         if i < len(exp)-2 and exp[i] == "'" and exp[i+2] == "'":
             output.append(exp[i+1])
             i += 2
+        #elif i < len(exp)-2 and exp[i] == "'" and exp[i+2] == "'":
+        #    output.append(exp[i+1])
+        #    i += 2
         elif i < len(exp)-1 and ord(exp[i]) in [10, 9, 13]:
             output.append(exp[i])
-            i += 1
         elif exp[i].isalnum() or exp[i] in ['#', '.', '+', '-', ',', '=', '"', "'", '|', '>', '<']:
             count = 0
             buff = exp[i]
@@ -133,7 +136,8 @@ def conversionToPostfix(expresion):
     #print(output)
     return output
 
+#print(conversionToPostfix('a{b}"."a{b}'))
+#print(conversionToPostfix("'"'{noQuote}'"'"))
 #print(conversionToPostfix('a!b'))
-#print(conversionToPostfix('a!b'))
-print(conversionToPostfix("'\n'!'\t'!'\r'"))
+#print(conversionToPostfix("\n!\t!\r"))
 #print(conversionToPostfix('< .'))

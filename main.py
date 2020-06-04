@@ -91,7 +91,7 @@ class Buffer():
 
             if buffer != '':
                 line.append(buffer)
-            print(line)
+            #print(line)
             return line
 
         file = open(stream, 'r')
@@ -102,7 +102,7 @@ class Buffer():
             if len(line) > 0:
                 words = words + clean(' '.join(line))
         file.close()
-        print(len(words))
+        #print(len(words))
         self.currentWord =  Node(words)
         self.nextWord = self.currentWord
     
@@ -412,9 +412,9 @@ class Scanner():
                 (llaveA, ['{', 'E', '}'])
                 ],
             'S': [
+                (self.char, ['c']),
                 (self.string, ['s']), 
                 (self.ident, ['i']), 
-                (self.char, ['c'])
                 ],
         }
 
@@ -622,10 +622,8 @@ class Scanner():
             elif state == 2 and self.period.check(token.val):
                 test = LL(M, ['i', 'ia', 's', 'c', 'a', 'x', '|', '(', ')', '[', ']', '{', '}', '<.', '.>', '(.', '.)'])
                 params = test.generateTree(['E', '.'], values + ['.'])
-                print(params[2])
                 self.tokens.update(params[2])
                 production['content'] = test
-                print(production)
                 productions[name] = production
                 print('PRODUCTION', name, 'ADDED')
                 
@@ -697,10 +695,9 @@ class Scanner():
         self.buffer.resetPeek()
 
 def main():
-    #scanner = Scanner("./tests/LittleCoColFinal.ATG")
-    scanner = Scanner("./tests/test2.txt")
+    scanner = Scanner("./tests/DoubleAritmetica.ATG")
     (c, k, t, p, start) = scanner.COMPILER()
     translator = Translator(c, k, t, p)
-    translator.translate('target', './inputs/sum.txt', start)
+    translator.translate('target', './inputs/sum2.txt', start)
 
 main()

@@ -49,10 +49,14 @@ def evaluate(text, tokens, keywords):
                         currentValue = currentValue.next
                         test = test + value
                 if last['keywords'] and last['text'] in keywords.keys():
-                    print('FOUND KEYWORD', keywords[last['text']])
+                    #print('FOUND KEYWORD', keywords[last['text']])
+                    real = (last['text'], 'KEYWORD')
+                    words.append()
                 else:
-                    print('TOKEN FOUND', last)
-                    words.append(last['text'])
+                    #print('TOKEN FOUND', last)
+                    real = (last['text'], last['name'])
+                    words.append(real)
+                print(real)
                 last = {}
             else:
                 print('ERORR WITH', currentValue.value)
@@ -61,5 +65,5 @@ def evaluate(text, tokens, keywords):
             nextValue = currentValue
         else:
             nextValue = nextValue.next
-    print(words)
+    #print(words)
     return words

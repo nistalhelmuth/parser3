@@ -2,11 +2,10 @@ from utils.dfa import DFA
 from utils.evaluate import evaluate, Node
 
 #CHARACTERS
-digit = DFA('0!6!1!8!5!3!9!2!4!7')
+digit = DFA('9!2!1!5!6!7!0!8!4!3')
 tab = DFA('\t')
 eol = DFA('\n')
-blanco = DFA('\n!\t!\r')
-blanco.get_core()
+blanco = DFA('\t!\r!\n')
 
 #KEYWORDS
 keywords = {}
@@ -15,7 +14,7 @@ keywords["do"] = "do"
 
 #TOKENS
 number = DFA("digit{digit}", {'digit': digit})
-decnumber = DFA('digit{digit}"."digit{digit}', {'digit': digit})
+decnumber = DFA("digit{digit}'.'digit{digit}", {'digit': digit})
 white = DFA("blanco{blanco}", {'blanco': blanco})
 part0 = DFA("';'", {})
 part1 = DFA("'.'", {})
@@ -36,21 +35,24 @@ class PRODUCTIONS():
 		self.last = None
 
 	def Expect(self, dfa):
-		self.last = self.nextToken.value
-		if self.last != None and dfa.check(self.last):
-			return True
+		if self.nextToken.value != None:
+			self.last = self.nextToken.value[0]
+			if dfa.check(self.last):
+				return True
 		return False
 
 	def Get(self, dfa):
-		self.last = self.currentToken.value
-		self.currentToken = self.currentToken.next
-		self.nextToken = self.currentToken
-		if self.last != None and dfa.check(self.last):
-			return self.last
+		if self.currentToken.value != None:
+			self.last = self.currentToken.value[0]
+			prev = self.nextToken.value[1]
+			self.currentToken = self.currentToken.next
+			self.nextToken = self.currentToken
+			if dfa.check(self.last):
+				return self.last
 		return False
 
 	def Double(self):
-		while(self.Expect(number) or self.Expect(part6) or self.Expect(decnumber) or self.Expect(part7)):
+		while(self.Expect(part6) or self.Expect(number) or self.Expect(decnumber) or self.Expect(part7)):
 			self.Stat()
 			self.Get(part0)
 			while(self.Expect(white)):
@@ -65,7 +67,7 @@ class PRODUCTIONS():
 	def Stat(self):
 		value=0		
 		value = self.Expression(value)
-		print("Resultado", value)		
+		print(value)		
 
 	def Expression(self,result):
 		result1=0		
@@ -124,7 +126,7 @@ class PRODUCTIONS():
 		result = float(self.last)		
 		return result
 
-file = open('./inputs/sum.txt', 'r')
+file = open('./inputs/sum2.txt', 'r')
 text = Node(''.join(file.read().splitlines()))
 file.close()
 words = evaluate(text, tokens, keywords)

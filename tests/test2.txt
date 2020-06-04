@@ -24,7 +24,7 @@ PRODUCTIONS
 Double= {Stat ";"{white}}{white}".".
 
 Stat = 							(.value=0.)
-	Expression<.ref value.>		(.print("Resultado", value).)
+	Expression<.ref value.>		(.print(value).)
 	.
 
 Expression<.ref result.> =			(.result1=0.)

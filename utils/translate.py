@@ -53,19 +53,26 @@ class Translator():
         f.write("\t\tself.nextToken = self.currentToken\n")
         f.write("\t\tself.last = None\n")
         f.write("\n")
+
         f.write("\tdef Expect(self, dfa):\n")
-        f.write("\t\tself.last = self.nextToken.value\n")
-        f.write("\t\tif self.last != None and dfa.check(self.last):\n")
-        f.write("\t\t\treturn True\n")
+        f.write("\t\tif self.nextToken.value != None:\n")
+        f.write("\t\t\tself.last = self.nextToken.value[0]\n")
+        f.write("\t\t\tif dfa.check(self.last):\n")
+        f.write("\t\t\t\treturn True\n")
         f.write("\t\treturn False\n")
+
         f.write("\n")
+
         f.write("\tdef Get(self, dfa):\n")
-        f.write("\t\tself.last = self.currentToken.value\n")
-        f.write("\t\tself.currentToken = self.currentToken.next\n")
-        f.write("\t\tself.nextToken = self.currentToken\n")
-        f.write("\t\tif self.last != None and dfa.check(self.last):\n")
-        f.write("\t\t\treturn self.last\n")
+        f.write("\t\tif self.currentToken.value != None:\n")
+        f.write("\t\t\tself.last = self.currentToken.value[0]\n")
+        f.write("\t\t\tprev = self.nextToken.value[1]\n")
+        f.write("\t\t\tself.currentToken = self.currentToken.next\n")
+        f.write("\t\t\tself.nextToken = self.currentToken\n")
+        f.write("\t\t\tif dfa.check(self.last):\n")
+        f.write("\t\t\t\treturn self.last\n")
         f.write("\t\treturn False\n")
+
         f.write("\n")
 
         firsts = {}
